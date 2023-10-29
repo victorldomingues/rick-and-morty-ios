@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-final class CharacterListViewViewModel : NSObject {
+final class RMCharacterListViewViewModel : NSObject {
     
     func fetchCharacters(){
         RMService.shared.execute( .listCharactersRequest,
@@ -26,15 +26,26 @@ final class CharacterListViewViewModel : NSObject {
     }
 }
 
-extension  CharacterListViewViewModel: UICollectionViewDataSource , UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
+extension  RMCharacterListViewViewModel: UICollectionViewDataSource , UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
+    
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection: Int) -> Int {
         return 20
     }
+    
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath)
-        cell.backgroundColor = .systemGreen
+        
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: RMCharacterCollectionViewCell.cellIdentifier,
+                                                            for: indexPath) as? RMCharacterCollectionViewCell else {
+            fatalError("Unsopported cell")
+        }
+        
+        let viewModel  =  RMCharacterCollectionCellViewModel(characterName: "Teste",
+                                                             characterStatus: .alive,
+                                                             characterImageURL: URL(string: "https://rickandmortyapi.com/api/character/avatar/1.jpeg"))
+        cell.configure(with: viewModel)
         return cell
     }
+    
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let bounds = UIScreen.main.bounds
         let width = (bounds.width-30)/2
@@ -43,4 +54,5 @@ extension  CharacterListViewViewModel: UICollectionViewDataSource , UICollection
             width: width, height: height
         )
     }
+    
 }

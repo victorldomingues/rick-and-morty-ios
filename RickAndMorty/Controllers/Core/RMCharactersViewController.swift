@@ -10,7 +10,7 @@ import UIKit
 /// Controller to show characters
 final class RMCharactersViewController: UIViewController {
     
-    private let characterViewList  = CharacterListView()
+    private let characterViewList  = RMCharacterListView()
     
     override func viewDidLoad() {
         super.viewDidLoad()
