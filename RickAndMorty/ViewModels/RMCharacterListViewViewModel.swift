@@ -8,20 +8,43 @@
 import Foundation
 import UIKit
 
+protocol RMCharacterListViewViewModelDelegate: AnyObject {
+    func didLoadInitialCharacters()
+}
+
 final class RMCharacterListViewViewModel : NSObject {
     
-    func fetchCharacters(){
+    public weak var delegate: RMCharacterListViewViewModelDelegate?
+    
+    private var characters:  [RMCharacter] = [] {
+        didSet {
+            for character in characters {
+                let viewModel = RMCharacterCollectionCellViewModel(
+                    characterName: character.name, characterStatus: character.status, characterImageURL: URL(string: character.image)
+                )
+                cellViewModels.append(viewModel)
+            }
+        }
+    }
+    
+    private var cellViewModels: [RMCharacterCollectionCellViewModel] = []
+    
+    public func fetchCharacters(){
         RMService.shared.execute( .listCharactersRequest,
                                   expecting: RMGetAllCharactersResponse.self) { result in
             switch result {
-            case .success(let model):
+            case .success(let responseModel):
+                let results  =  responseModel.results
+                self.characters = results
+                DispatchQueue.main.async {
+                    self.delegate?.didLoadInitialCharacters()
+                }
                 // print(String(describing: model))
-                print("Total: "+String(model.info.count))
-                print("Page result count: "+String(model.results.count))
+                print("Total: "+String(responseModel.info.count))
+                print("Page result count: "+String(responseModel.results.count))
             case .failure(let error):
                 print(String(describing: error))
             }
-            
         }
     }
 }
@@ -29,7 +52,7 @@ final class RMCharacterListViewViewModel : NSObject {
 extension  RMCharacterListViewViewModel: UICollectionViewDataSource , UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection: Int) -> Int {
-        return 20
+        return cellViewModels.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -38,11 +61,8 @@ extension  RMCharacterListViewViewModel: UICollectionViewDataSource , UICollecti
                                                             for: indexPath) as? RMCharacterCollectionViewCell else {
             fatalError("Unsopported cell")
         }
-        
-        let viewModel  =  RMCharacterCollectionCellViewModel(characterName: "Teste",
-                                                             characterStatus: .alive,
-                                                             characterImageURL: URL(string: "https://rickandmortyapi.com/api/character/avatar/1.jpeg"))
-        cell.configure(with: viewModel)
+
+        cell.configure(with: cellViewModels[indexPath.row])
         return cell
     }
     
